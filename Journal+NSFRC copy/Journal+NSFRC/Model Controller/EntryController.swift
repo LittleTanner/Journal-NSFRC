@@ -13,10 +13,25 @@ class EntryController {
     
     static let sharedInstance = EntryController()
     
-    /// Entries is a computed Property. Its getting its values from the results of a NSFetchRequest. The <Model> means defines the generic type. This ensures that our entries array can ONLY hold Entry Objects.
-    var entries: [Entry] {
+    // Local NSFRC var
+    var fetchedResultsController: NSFetchedResultsController<Entry>
+    
+    // NSFRC:
+    init() {
         let fetchRequest: NSFetchRequest<Entry> = Entry.fetchRequest()
-        return (try? CoreDataStack.context.fetch(fetchRequest)) ?? []
+        
+        fetchRequest.sortDescriptors = [NSSortDescriptor(key: "timestamp", ascending: false)]
+        
+        let resultsController: NSFetchedResultsController<Entry> = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: CoreDataStack.context, sectionNameKeyPath: nil, cacheName: nil)
+        
+        // Assign the NSFRC we just created to the local var so we can access the resultsController outside of this init
+        fetchedResultsController = resultsController
+        
+        do {
+            try fetchedResultsController.performFetch()
+        } catch {
+            print("There was an error performing the fetch!!! \(#function) \(error.localizedDescription)")
+        }
     }
     
     //CRUD
